@@ -1,0 +1,21 @@
+function main(workbook: ExcelScript.Workbook): string {
+  const sheet = workbook.getWorksheets()[0]; // change index/name if your table isn't on the first sheet
+  const table = sheet.getTables()[0]; // change index if there are multiple tables
+  const range = table.getRangeBetweenHeaderAndTotal();
+  const values = range.getValues();
+  const headers = table.getHeaderRowRange().getValues()[0] as string[];
+
+  const idCol = headers.indexOf("Employee_No");
+  const fieldNames = ["Proposed_Actual_Salary", "Proposed_FTE_Salary", "Proposed_Actual_Bonus"];
+  const cols = fieldNames.map(c => headers.indexOf(c));
+
+  const result = values.map(row => {
+    const obj: Record<string, any> = { Employee_No: row[idCol] };
+    fieldNames.forEach((name, i) => {
+      obj[name] = row[cols[i]];
+    });
+    return obj;
+  });
+
+  return JSON.stringify(result);
+}
