@@ -1,0 +1,59 @@
+function main(workbook: ExcelScript.Workbook, jsonChange: string, jsonBaseline: string): string {
+  const change: Record<string, any>[] = JSON.parse(jsonChange);
+  const baseline: Record<string, any>[] = JSON.parse(jsonBaseline);
+  const baseMap = new Map(baseline.map(r => [r.EmployeeID, r]));
+
+  const fields = ["Bonus", "BonusFTE", "ProposedSalary", "ProposedSalaryFTE"];
+  const changes: any[] = [];
+
+  change.forEach(rowChange => {
+    const rowBase = baseMap.get(rowChange.EmployeeID);
+    if (!rowBase) return;
+    fields.forEach(f => {
+      if (rowChange[f] !== rowBase[f]) {
+        changes.push({
+          EmployeeID: rowChange.EmployeeID,
+          Field: f,
+          OldValue: rowBase[f],
+          NewValue: rowChange[f]
+        });
+      }
+    });
+  });
+
+  if (changes.length === 0) {
+    return JSON.stringify({ hasChanges: false });
+  }
+
+  const headerRow = {
+    type: "TableRow",
+    cells: ["Employee ID", "Field", "Old", "New"].map(t => ({
+      type: "TableCell",
+      items: [{ type: "TextBlock", text: t, weight: "Bolder" }]
+    }))
+  };
+
+  const dataRows = changes.map(c => ({
+    type: "TableRow",
+    cells: [c.EmployeeID, c.Field, c.OldValue, c.NewValue].map(v => ({
+      type: "TableCell",
+      items: [{ type: "TextBlock", text: String(v) }]
+    }))
+  }));
+
+  const card = {
+    type: "AdaptiveCard",
+    $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+    version: "1.5",
+    body: [
+      { type: "TextBlock", text: "Salary Review Changes", weight: "Bolder", size: "Medium" },
+      {
+        type: "Table",
+        columns: [{ width: 1 }, { width: 1 }, { width: 1 }, { width: 1 }],
+        rows: [headerRow, ...dataRows]
+      }
+    ]
+  };
+
+  return JSON.stringify({ hasChanges: true, card: card });
+}
