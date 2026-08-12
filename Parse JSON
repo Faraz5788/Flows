@@ -1,0 +1,13 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "EmployeeID": {},
+      "Field": {"type": "string"},
+      "OldValue": {},
+      "NewValue": {}
+    },
+    "required": ["EmployeeID", "Field", "OldValue", "NewValue"]
+  }
+}
