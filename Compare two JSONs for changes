@@ -1,0 +1,25 @@
+function main(workbook: ExcelScript.Workbook, jsonChange: string, jsonBaseline: string): string {
+  const change: Record<string, any>[] = JSON.parse(jsonChange);
+  const baseline: Record<string, any>[] = JSON.parse(jsonBaseline);
+  const baseMap = new Map(baseline.map(r => [r.EmployeeID, r]));
+
+  const fields = ["Bonus", "BonusFTE", "ProposedSalary", "ProposedSalaryFTE"];
+  const changes: any[] = [];
+
+  change.forEach(rowChange => {
+    const rowBase = baseMap.get(rowChange.EmployeeID);
+    if (!rowBase) return;
+    fields.forEach(f => {
+      if (rowChange[f] !== rowBase[f]) {
+        changes.push({
+          EmployeeID: rowChange.EmployeeID,
+          Field: f,
+          OldValue: rowBase[f],
+          NewValue: rowChange[f]
+        });
+      }
+    });
+  });
+
+  return JSON.stringify(changes);
+}
